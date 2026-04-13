@@ -3,483 +3,771 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>分級圖檔下載器（線上版）</title>
+<title>能源分級圖檔控制台</title>
 <style>
 :root {
-    --bg: #F5F5F7;
-    --card: rgba(255, 255, 255, 0.85);
-    --text: #1D1D1F;
-    --sub: #86868B;
-    --border: #D2D2D7;
-    --blue: #0071E3;
-    --blue-h: #0077ED;
-    --green: #34C759;
-    --red: #FF3B30;
-    --orange: #FF9F0A;
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro TC", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --gradient-brand: linear-gradient(135deg, #0071E3 0%, #4facfe 100%);
+    --bg: #f2efe8;
+    --panel: rgba(255, 252, 247, 0.86);
+    --panel-strong: #fffaf2;
+    --text: #1c2329;
+    --muted: #6e7681;
+    --line: rgba(28, 35, 41, 0.08);
+    --brand: #0f6fff;
+    --brand-dark: #0a4bbb;
+    --accent: #12b886;
+    --warn: #ff9f1c;
+    --danger: #ef4444;
+    --shadow: 0 28px 80px rgba(24, 42, 62, 0.14);
+    --radius-xl: 32px;
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --font: "Avenir Next", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #000000;
-        --card: rgba(28, 28, 30, 0.75);
-        --text: #F5F5F7;
-        --sub: #98989D;
-        --border: #3A3A3C;
-        --gradient-brand: linear-gradient(135deg, #0A84FF 0%, #4facfe 100%);
-    }
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 60px 20px 80px;
-    -webkit-font-smoothing: antialiased;
-    background-image: radial-gradient(circle at 15% 10%, rgba(0,113,227,0.06) 0%, transparent 40%),
-                      radial-gradient(circle at 85% 90%, rgba(52,199,89,0.04) 0%, transparent 40%);
+    font-family: var(--font);
+    color: var(--text);
+    background:
+        radial-gradient(circle at top left, rgba(15, 111, 255, 0.18), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(18, 184, 134, 0.18), transparent 30%),
+        linear-gradient(135deg, #f6f2eb 0%, #eef4f9 55%, #f4efe6 100%);
+    padding: 28px;
 }
-.card {
-    background: var(--card);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 24px;
-    box-shadow: 0 16px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
-    padding: 40px 36px;
-    width: 100%;
-    max-width: 620px;
+.shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    gap: 24px;
+}
+.hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
+}
+.hero-card,
+.panel {
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+}
+.hero-card {
+    border-radius: var(--radius-xl);
+    padding: 32px;
     position: relative;
     overflow: hidden;
 }
-
-/* Header */
-.header { margin-bottom: 32px; display: flex; align-items: center; gap: 16px; }
-.brand-icon {
-    width: 48px; height: 48px;
-    border-radius: 14px;
-    background: var(--gradient-brand);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 16px rgba(0,113,227,0.25);
+.hero-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -60px -80px auto;
+    width: 240px;
+    height: 240px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(15, 111, 255, 0.24), transparent 70%);
 }
-.brand-icon svg { width: 24px; height: 24px; fill: #fff; }
-.header-titles h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-.header-titles p  { font-size: 14px; color: var(--sub); line-height: 1.5; }
-
-/* Download Info */
-.info-row {
+.hero-top {
     display: flex;
     align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.brand-mark {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--brand) 0%, #36b5ff 100%);
+    color: white;
+    box-shadow: 0 12px 28px rgba(15, 111, 255, 0.34);
+}
+.brand-mark svg { width: 26px; height: 26px; fill: currentColor; }
+.eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand-dark);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.hero-title {
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1.02;
+    letter-spacing: -0.05em;
+    font-weight: 750;
+    margin-bottom: 14px;
+}
+.hero-copy {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--muted);
+    max-width: 52ch;
+    margin-bottom: 20px;
+}
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.chip {
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border: 1px solid rgba(15, 111, 255, 0.12);
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--brand-dark);
+}
+.hero-side {
+    display: grid;
+    gap: 16px;
+}
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+.metric-card {
+    border-radius: 24px;
+    padding: 22px;
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: var(--shadow);
+}
+.metric-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+.metric-value {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 6px;
+}
+.metric-value.ok { color: var(--accent); }
+.metric-value.err { color: var(--danger); }
+.metric-value.warn { color: var(--warn); }
+.metric-hint {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+}
+.panel {
+    border-radius: var(--radius-xl);
+    padding: 24px;
+}
+.workspace {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 24px;
+}
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     gap: 12px;
-    background: rgba(0,113,227,.05);
-    border: 1px solid rgba(0,113,227,0.1);
-    border-radius: 16px;
+    margin-bottom: 14px;
+}
+.section-title h2 {
+    font-size: 21px;
+    letter-spacing: -0.03em;
+}
+.section-title p {
+    font-size: 13px;
+    color: var(--muted);
+}
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.ghost-btn {
+    border: 1px solid rgba(28, 35, 41, 0.1);
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.ghost-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(15, 111, 255, 0.28);
+    background: white;
+}
+.ghost-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    transform: none;
+}
+.input-shell {
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(15, 111, 255, 0.1);
     padding: 16px;
-    margin-bottom: 24px;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
-.info-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    background: rgba(0,113,227,0.1);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+.input-shell.dragover {
+    background: rgba(240, 248, 255, 0.92);
+    border-color: rgba(15, 111, 255, 0.45);
+    transform: translateY(-1px);
 }
-@media (prefers-color-scheme: dark) { .info-icon { background: rgba(10,132,255,0.15); } }
-.info-icon svg { width: 18px; height: 18px; fill: var(--blue); }
-.info-text { flex: 1; min-width: 0; }
-.info-label { font-size: 11px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
-.info-value  { font-size: 14px; font-weight: 500; color: var(--text); }
-
-/* Textarea & Dropzone */
-.field-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
-.field-label { font-size: 12px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .05em; }
-.tools-row { display: flex; gap: 8px; }
-.btn-tool {
-    background: none; border: none; color: var(--blue); font-size: 12px; font-weight: 500;
-    cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.15s;
-}
-.btn-tool:hover { background: rgba(0,113,227,0.08); }
-.btn-tool:disabled { color: var(--sub); cursor: not-allowed; background: none; }
-
-.textarea-wrapper { position: relative; }
 textarea {
     width: 100%;
+    min-height: 290px;
+    border: none;
     background: transparent;
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    font-family: var(--font);
-    font-size: 15px;
-    color: var(--text);
     resize: vertical;
-    min-height: 140px;
-    line-height: 1.6;
     outline: none;
-    transition: all .2s;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text);
 }
-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0,113,227,.12); background: var(--card); }
-textarea::placeholder { color: var(--border); }
-.textarea-wrapper.dragover textarea {
-    border-color: var(--blue);
-    background: rgba(0,113,227,0.03);
-    border-style: dashed;
-}
-.drop-overlay {
-    position: absolute; inset: 0; pointer-events: none;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.2s;
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); border-radius: 16px;
-}
-@media (prefers-color-scheme: dark) { .drop-overlay { background: rgba(28,28,30,0.8); } }
-.textarea-wrapper.dragover .drop-overlay { opacity: 1; }
-.drop-overlay svg { width: 32px; height: 32px; fill: var(--blue); margin-bottom: 8px; }
-.drop-overlay span { font-size: 14px; font-weight: 600; color: var(--blue); }
-
-/* Counter & Badges */
-.input-footer {
+textarea::placeholder { color: #98a2ad; }
+.input-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 8px;
-    margin-bottom: 6px;
-    min-height: 20px;
+    margin-top: 12px;
+    gap: 12px;
 }
-.badge-warning {
-    font-size: 11px; font-weight: 600; color: var(--orange);
-    background: rgba(255,159,10,0.1); padding: 3px 8px; border-radius: 10px;
-    display: none; animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.model-count {
+.mini-note {
     font-size: 12px;
-    color: var(--sub);
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
+    color: var(--muted);
 }
-
-/* Action */
-.action-row { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
-.btn-main {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--gradient-brand);
-    color: #fff;
+.warn-pill {
+    display: none;
+    font-size: 12px;
+    color: #8a5300;
+    background: rgba(255, 159, 28, 0.14);
+    border: 1px solid rgba(255, 159, 28, 0.22);
+    border-radius: 999px;
+    padding: 8px 10px;
+    font-weight: 700;
+}
+.action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+.primary-btn {
     border: none;
-    border-radius: 24px;
-    padding: 14px 32px;
-    font-family: var(--font);
+    border-radius: 999px;
+    padding: 14px 24px;
+    font: inherit;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: white;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(0,113,227,.35);
-    transition: all .2s cubic-bezier(.4,0,.2,1);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--brand) 0%, #36b5ff 100%);
+    box-shadow: 0 14px 30px rgba(15, 111, 255, 0.26);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.btn-main:hover  { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,113,227,.4); }
-.btn-main:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,113,227,.3); }
-.btn-main:disabled { background: var(--border); box-shadow: none; color: rgba(255,255,255,0.8); cursor: not-allowed; transform: none; }
-.btn-secondary {
-    display: none; align-items: center; gap: 6px;
-    background: transparent;
-    color: var(--sub);
-    border: 1.5px solid var(--border);
-    border-radius: 24px;
-    padding: 12px 24px;
-    font-family: var(--font);
+.primary-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 34px rgba(15, 111, 255, 0.3);
+}
+.primary-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.secondary-btn {
+    border: 1px solid rgba(28, 35, 41, 0.1);
+    border-radius: 999px;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--text);
+    font: inherit;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 700;
     cursor: pointer;
-    transition: all .15s;
 }
-.btn-secondary:hover { border-color: var(--text); color: var(--text); background: rgba(0,0,0,0.02); }
-@media (prefers-color-scheme: dark) { .btn-secondary:hover { background: rgba(255,255,255,0.05); } }
-.spinner {
-    width: 18px; height: 18px;
-    border: 2.5px solid rgba(255,255,255,.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin .8s linear infinite;
-    display: none;
+.side-stack {
+    display: grid;
+    gap: 16px;
 }
-.btn-main.loading .spinner { display: block; }
-.btn-main.loading .btn-label { display: none; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Progress Bar */
-.progress-bar-container {
-    display: none;
-    margin-top: 28px;
+.info-card {
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248, 251, 255, 0.78));
+    border: 1px solid rgba(255,255,255,0.8);
+    padding: 20px;
+}
+.info-card h3 {
+    font-size: 16px;
     margin-bottom: 8px;
-    animation: fadeIn 0.4s ease;
 }
-.progress-track {
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(0,0,0,0.05);
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+.info-card p,
+.info-card li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
 }
-@media (prefers-color-scheme: dark) { .progress-track { background: rgba(255,255,255,0.05); } }
-.progress-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: var(--gradient-brand);
-    width: 0%;
-    transition: width .4s cubic-bezier(0.2, 0, 0, 1);
-    position: relative;
+.info-card ul {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
 }
-.progress-fill::after {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    animation: shimmer 1.5s infinite;
+.api-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(15, 111, 255, 0.08);
+    color: var(--brand-dark);
+    margin-top: 14px;
+    word-break: break-all;
 }
-@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-.progress-label {
+.progress-card,
+.results-card {
+    border-radius: var(--radius-xl);
+}
+.progress-card { padding: 22px; }
+.progress-top {
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+.progress-title {
+    font-size: 18px;
+    font-weight: 750;
+}
+.progress-subtitle {
     font-size: 13px;
-    font-weight: 500;
-    color: var(--sub);
-    font-variant-numeric: tabular-nums;
+    color: var(--muted);
 }
-
-/* Results */
-.results { margin-top: 28px; display: none; }
-.results-header {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 0;
+.progress-track {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(28, 35, 41, 0.08);
+    overflow: hidden;
 }
-.results-title {
-    font-size: 12px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .05em;
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--brand) 0%, #34d5ff 100%);
+    transition: width 0.28s ease;
 }
-.result-list { list-style: none; }
-.result-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 8px;
-    border-bottom: 1px solid rgba(0,0,0,0.04);
-    font-size: 14px;
-    gap: 12px;
-    animation: slideIn 0.3s cubic-bezier(0.2, 0, 0, 1) backwards;
-}
-@media (prefers-color-scheme: dark) { .result-item { border-bottom-color: rgba(255,255,255,0.04); } }
-.result-item:last-child { border-bottom: none; }
-.result-model { font-weight: 500; letter-spacing: .02em; word-break: break-all; }
-.result-info { display: flex; align-items: center; gap: 12px; }
-.result-status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sub); white-space: nowrap; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sub); flex-shrink: 0; box-shadow: 0 0 0 2px transparent; transition: all 0.3s;}
-.dot.ok      { background: var(--green); box-shadow: 0 0 0 2px rgba(52,199,89,0.2); }
-.dot.err     { background: var(--red); box-shadow: 0 0 0 2px rgba(255,59,48,0.2); }
-.dot.pending { background: var(--orange); animation: pulse 1.4s ease-in-out infinite; }
-@keyframes pulse { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,159,10,0.4); } 50% { opacity: .4; box-shadow: 0 0 0 4px transparent; } 100% { opacity: 1; box-shadow: 0 0 0 0 transparent; } }
-.err-msg { color: var(--red); }
-.preview-btn {
-    background: none; border: none; color: var(--blue); cursor: pointer; padding: 4px; border-radius: 6px;
-    display: none; transition: background 0.2s;
-}
-.preview-btn:hover { background: rgba(0,113,227,0.1); }
-.preview-btn svg { width: 16px; height: 16px; fill: currentColor; display: block; }
-.download-btn {
-    background: none; border: none; color: var(--blue); cursor: pointer; padding: 4px; border-radius: 6px;
-    display: none; transition: background 0.2s;
-}
-.download-btn:hover { background: rgba(0,113,227,0.1); }
-.download-btn svg { width: 16px; height: 16px; fill: currentColor; display: block; }
-
-/* Image Modal */
-.modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-    display: none; justify-content: center; align-items: center; z-index: 100;
-    opacity: 0; transition: opacity 0.2s; padding: 20px;
-}
-.modal-overlay.show { display: flex; opacity: 1; }
-.modal-content {
-    background: var(--card); border-radius: 20px; padding: 24px; max-width: 90vw; max-height: 90vh;
-    box-shadow: 0 24px 48px rgba(0,0,0,0.2); position: relative;
-    transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    display: flex; flex-direction: column; align-items: center;
-}
-.modal-overlay.show .modal-content { transform: scale(1); }
-.modal-close {
-    position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.05); border: none;
-    width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--text); transition: background 0.2s;
-}
-@media (prefers-color-scheme: dark) { .modal-close { background: rgba(255,255,255,0.1); } }
-.modal-close:hover { background: rgba(0,0,0,0.1); }
-.modal-img { max-width: 100%; max-height: calc(90vh - 80px); object-fit: contain; border-radius: 8px; margin-top: 12px; }
-.modal-title { font-weight: 600; font-size: 16px; width: 100%; text-align: left; margin-bottom: 8px; padding-right: 32px; word-break: break-all; }
-
-/* Summary bar */
-.summary-card {
+.notice-board {
     display: none;
-    margin-top: 24px;
-    padding: 20px;
+    margin-top: 16px;
+    gap: 10px;
+}
+.notice-item {
     border-radius: 16px;
-    background: rgba(0,113,227,.04);
-    border: 1px solid rgba(0,113,227,.1);
-    animation: fadeIn 0.5s ease;
-}
-.summary-stats { display: flex; gap: 24px; margin-bottom: 16px; }
-.stat-item { display: flex; flex-direction: column; gap: 4px; }
-.stat-val { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.stat-val.ok { color: var(--green); }
-.stat-val.err { color: var(--red); }
-.stat-label { font-size: 12px; color: var(--sub); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-.summary-time { font-size: 13px; color: var(--sub); margin-bottom: 0; }
-
-/* Footer actions */
-.results-footer {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.btn-small {
-    display: flex; align-items: center; gap: 6px;
-    background: transparent;
-    color: var(--blue);
-    border: 1px solid rgba(0,113,227,.25);
-    border-radius: 20px;
-    padding: 10px 20px;
-    font-family: var(--font);
+    padding: 12px 14px;
+    background: rgba(15, 111, 255, 0.08);
+    color: var(--brand-dark);
     font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .2s;
-    box-shadow: 0 2px 0 transparent;
+    line-height: 1.6;
+    border: 1px solid rgba(15, 111, 255, 0.12);
 }
-.btn-small:hover { background: rgba(0,113,227,.06); border-color: rgba(0,113,227,.4); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,113,227,0.1); }
-.btn-small:active { transform: translateY(0); box-shadow: none; }
-.btn-small svg { width: 16px; height: 16px; fill: var(--blue); }
-.btn-small.btn-danger { color: var(--red); border-color: rgba(255,59,48,0.25); }
-.btn-small.btn-danger:hover { background: rgba(255,59,48,0.06); border-color: rgba(255,59,48,0.4); box-shadow: 0 2px 8px rgba(255,59,48,0.1); }
-.btn-small.btn-danger svg { fill: var(--red); }
-
-/* Animations */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 50% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+.results-card { padding: 24px; }
+.results-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.results-head h2 {
+    font-size: 22px;
+    letter-spacing: -0.03em;
+}
+.results-head p {
+    font-size: 13px;
+    color: var(--muted);
+}
+.result-list {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+.result-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.7);
+    padding: 16px 18px;
+}
+.result-main {
+    min-width: 0;
+}
+.result-model {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+.result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 800;
+}
+.status-pill::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;
+}
+.status-ok { background: rgba(18, 184, 134, 0.12); color: #0d8a64; }
+.status-warn { background: rgba(255, 159, 28, 0.12); color: #9f5d00; }
+.status-err { background: rgba(239, 68, 68, 0.12); color: #b42318; }
+.tag {
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: rgba(28, 35, 41, 0.06);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.result-message {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
+}
+.result-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid rgba(28, 35, 41, 0.08);
+    background: white;
+    color: var(--brand-dark);
+    display: none;
+    place-items: center;
+    cursor: pointer;
+}
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+.summary-box {
+    border-radius: 18px;
+    padding: 16px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid var(--line);
+}
+.summary-box .metric-value {
+    font-size: 30px;
+    margin-bottom: 4px;
+}
+.summary-box .metric-label {
+    margin-bottom: 2px;
+}
+.footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+.empty-state {
+    padding: 28px;
+    text-align: center;
+    border-radius: 20px;
+    border: 1px dashed rgba(28, 35, 41, 0.14);
+    color: var(--muted);
+    background: rgba(255,255,255,0.52);
+}
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(18, 24, 31, 0.72);
+    backdrop-filter: blur(6px);
+    padding: 24px;
+    z-index: 30;
+}
+.modal-overlay.show { display: flex; }
+.modal-card {
+    width: min(920px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    border-radius: 28px;
+    background: white;
+    padding: 24px;
+    position: relative;
+}
+.modal-card img {
+    width: 100%;
+    border-radius: 18px;
+    background: #f3f4f6;
+}
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(28, 35, 41, 0.06);
+    cursor: pointer;
+}
+.modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    padding-right: 42px;
+}
+@media (max-width: 960px) {
+    body { padding: 18px; }
+    .hero,
+    .workspace {
+        grid-template-columns: 1fr;
+    }
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 640px) {
+    .hero-card,
+    .panel { padding: 20px; }
+    .metric-grid,
+    .summary-grid { grid-template-columns: 1fr; }
+    .results-head,
+    .progress-top,
+    .section-title,
+    .input-meta { flex-direction: column; align-items: flex-start; }
+    .result-item { grid-template-columns: 1fr; }
+    .result-actions { justify-content: flex-start; }
+}
 </style>
 </head>
 <body>
+<main class="shell">
+    <section class="hero">
+        <article class="hero-card">
+            <div class="hero-top">
+                <div class="brand-mark">
+                    <svg viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 4v2h8V8H8zm0 4v2h8v-2H8z"/></svg>
+                </div>
+                <div>
+                    <div class="eyebrow">Energy Label Desk</div>
+                    <h1 class="hero-title">能源分級圖檔控制台</h1>
+                </div>
+            </div>
+            <p class="hero-copy">
+                批量查詢、智慧快取、分級錯誤辨識與 ZIP 匯出，專門為大量型號作業整理成一條順手的下載流程。
+            </p>
+            <div class="chip-row">
+                <span class="chip">ZIP 一鍵打包</span>
+                <span class="chip">15 分鐘短期快取</span>
+                <span class="chip">批次冷卻重試</span>
+                <span class="chip">Render 後端代理</span>
+            </div>
+        </article>
 
-<div class="card">
-    <div class="header">
-        <div class="brand-icon">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-        </div>
-        <div class="header-titles">
-            <h1>分級圖檔下載器</h1>
-            <p>自動搜尋、去重、並下載能效標章圖片。</p>
-        </div>
-    </div>
+        <aside class="hero-side">
+            <div class="metric-grid">
+                <section class="metric-card">
+                    <div class="metric-label">成功項目</div>
+                    <div class="metric-value ok" id="heroOk">0</div>
+                    <p class="metric-hint">本輪可直接打包進 ZIP 的圖檔數量。</p>
+                </section>
+                <section class="metric-card">
+                    <div class="metric-label">暫失 / 錯誤</div>
+                    <div class="metric-value err" id="heroErr">0</div>
+                    <p class="metric-hint">包含型號不存在、官網故障、拒絕連線與圖片解析失敗。</p>
+                </section>
+                <section class="metric-card">
+                    <div class="metric-label">快取命中</div>
+                    <div class="metric-value warn" id="heroCache">0</div>
+                    <p class="metric-hint">短時間重查同型號時會直接回用已抓到的結果。</p>
+                </section>
+                <section class="metric-card">
+                    <div class="metric-label">批次進度</div>
+                    <div class="metric-value" id="heroProgress">0%</div>
+                    <p class="metric-hint">系統會在大量暫時錯誤時自動冷卻後再做第二輪批次重試。</p>
+                </section>
+            </div>
+        </aside>
+    </section>
 
-    <!-- 下載資訊 -->
-    <div class="info-row">
-        <div class="info-icon">
-            <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm7-18l-5.5 5.5 1.42 1.42L11 6.84V16h2V6.84l3.08 3.08 1.42-1.42L12 2z"/></svg>
-        </div>
-        <div class="info-text">
-            <div class="info-label">下載位置</div>
-            <div class="info-value">瀏覽器預設下載資料夾</div>
-        </div>
-    </div>
+    <section class="workspace">
+        <section class="panel">
+            <div class="section-title">
+                <div>
+                    <h2>型號輸入</h2>
+                    <p>每行一個型號，也支援貼上逗號分隔內容與拖曳 `.txt` / `.csv`。</p>
+                </div>
+                <div class="toolbar">
+                    <button class="ghost-btn" id="historyBtn" onclick="loadHistory()">載入上次紀錄</button>
+                    <button class="ghost-btn" id="dedupBtn" onclick="removeDuplicates()" disabled>去除重複</button>
+                    <button class="ghost-btn" id="clearBtn" onclick="clearAll()" style="display:none;">清空</button>
+                </div>
+            </div>
 
-    <!-- 型號輸入 -->
-    <div class="field-header">
-        <div class="field-label">型號列表</div>
-        <div class="tools-row">
-            <button class="btn-tool" id="historyBtn" onclick="loadHistory()">載入上次紀錄</button>
-            <button class="btn-tool" id="dedupBtn" onclick="removeDuplicates()" disabled>去除重複</button>
-        </div>
-    </div>
-    
-    <div class="textarea-wrapper" id="dropZone">
-        <textarea id="models" placeholder="在此輸入或貼上型號，例如：&#10;RXV50ZVLT&#10;RXV60ZVLT&#10;&#10;✨ 支援拖曳 .txt 或 .csv 檔案至此處自動匯入"></textarea>
-        <div class="drop-overlay">
-            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            <span>放開以匯入檔案內容</span>
-        </div>
-    </div>
-    
-    <div class="input-footer">
-        <span class="badge-warning" id="dupBadge">發現重複型號！</span>
-        <span class="model-count" id="modelCount">0 個型號</span>
-    </div>
+            <div class="input-shell" id="dropZone">
+                <textarea id="models" placeholder="例如：&#10;28cmtd&#10;RXV50ZVLT&#10;RXV60ZVLT"></textarea>
+                <div class="input-meta">
+                    <span class="warn-pill" id="dupBadge">發現重複型號，建議先整理</span>
+                    <span class="mini-note" id="modelCount">0 個型號</span>
+                </div>
+            </div>
 
-    <!-- 送出 -->
-    <div class="action-row">
-        <button class="btn-secondary" id="clearBtn" onclick="clearAll()">重設</button>
-        <button class="btn-main" id="dlBtn" onclick="startDownload()">
-            <span class="btn-label">開始抓取</span>
-            <div class="spinner"></div>
-        </button>
-    </div>
+            <div class="action-bar">
+                <button class="primary-btn" id="runBtn" onclick="startBatch()">開始抓取並整理</button>
+                <button class="secondary-btn" id="zipBtn" onclick="downloadZipBundle()" style="display:none;">下載 ZIP</button>
+                <button class="secondary-btn" id="retryBtn" onclick="retryTransient()" style="display:none;">只重跑失敗項目</button>
+                <button class="secondary-btn" id="downloadAllBtn" onclick="downloadAllIndividually()" style="display:none;">逐張下載</button>
+            </div>
+        </section>
 
-    <!-- 進度條 -->
-    <div class="progress-bar-container" id="progressContainer">
+        <aside class="side-stack">
+            <section class="info-card">
+                <h3>目前後端</h3>
+                <p>前端只負責操作與下載；真正抓官網資料的工作由 Render API 處理。</p>
+                <div class="api-badge" id="apiBadge">尚未設定 Render API</div>
+            </section>
+            <section class="info-card">
+                <h3>錯誤分類</h3>
+                <ul>
+                    <li>`型號不存在`：官網查無結果。</li>
+                    <li>`官網暫時故障`：逾時、5xx、連線不穩，會自動重試。</li>
+                    <li>`官網拒絕連線`：401 / 403 類型。</li>
+                    <li>`圖片解析失敗`：找到產品，但回傳圖片資料格式異常。</li>
+                </ul>
+            </section>
+            <section class="info-card">
+                <h3>下載策略</h3>
+                <ul>
+                    <li>優先使用後端 ZIP 打包，避免瀏覽器跳出多次下載。</li>
+                    <li>同型號短時間重查會直接命中快取，降低對官網壓力。</li>
+                    <li>若整批暫時性失敗過多，系統會冷卻後再做第二輪批次重試。</li>
+                </ul>
+            </section>
+        </aside>
+    </section>
+
+    <section class="panel progress-card">
+        <div class="progress-top">
+            <div>
+                <div class="progress-title">批次進度</div>
+                <div class="progress-subtitle" id="progressText">等待開始</div>
+            </div>
+            <div class="progress-subtitle" id="progressPercent">0%</div>
+        </div>
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="progress-label">
-            <span id="progressText">準備中…</span>
-            <span id="progressPercent">0%</span>
-        </div>
-    </div>
+        <div class="notice-board" id="noticeBoard"></div>
+    </section>
 
-    <!-- 結果 -->
-    <div class="results" id="results">
-        <div class="results-header">
-            <span class="results-title">執行結果</span>
-        </div>
-        <ul class="result-list" id="resultList"></ul>
-        
-        <!-- 統計摘要 -->
-        <div class="summary-card" id="summaryCard">
-            <div class="summary-stats">
-                <div class="stat-item">
-                    <span class="stat-val ok" id="statOk">0</span>
-                    <span class="stat-label">成功下載</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-val err" id="statErr">0</span>
-                    <span class="stat-label">遭遇失敗</span>
-                </div>
+    <section class="panel results-card">
+        <div class="results-head">
+            <div>
+                <h2>執行結果</h2>
+                <p>系統會即時更新每一筆型號的最終狀態，若觸發批次冷卻重跑也會覆蓋顯示。</p>
             </div>
-            <p class="summary-time" id="summaryTime">耗時 0.0 秒</p>
-            
-            <div class="results-footer" id="resultsFooter" style="margin-top: 20px;">
-                <button class="btn-small btn-danger" id="retryBtn" onclick="retryFailed()" style="display:none;">
-                    <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-                    重試失敗項目
-                </button>
-                <button class="btn-small" id="downloadAllBtn" onclick="downloadAll()" style="display:none;">
-                    <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm7-18l-5.5 5.5 1.42 1.42L11 6.84V16h2V6.84l3.08 3.08 1.42-1.42L12 2z"/></svg>
-                    下載全部
-                </button>
-            </div>
+            <div class="mini-note" id="summaryTime">尚未開始</div>
         </div>
-    </div>
-</div>
 
-<!-- 圖片預覽 Modal -->
+        <ul class="result-list" id="resultList">
+            <li class="empty-state" id="emptyState">輸入型號後開始抓取，這裡會顯示即時結果與下載操作。</li>
+        </ul>
+
+        <div class="summary-grid">
+            <div class="summary-box">
+                <div class="metric-label">成功</div>
+                <div class="metric-value ok" id="statOk">0</div>
+                <div class="metric-hint">可加入 ZIP</div>
+            </div>
+            <div class="summary-box">
+                <div class="metric-label">失敗</div>
+                <div class="metric-value err" id="statErr">0</div>
+                <div class="metric-hint">需要人工確認</div>
+            </div>
+            <div class="summary-box">
+                <div class="metric-label">快取命中</div>
+                <div class="metric-value warn" id="statCache">0</div>
+                <div class="metric-hint">免重打官網</div>
+            </div>
+            <div class="summary-box">
+                <div class="metric-label">批次重跑</div>
+                <div class="metric-value" id="statBatchRetry">0</div>
+                <div class="metric-hint">冷卻後補跑筆數</div>
+            </div>
+        </div>
+    </section>
+</main>
+
 <div class="modal-overlay" id="imgModal" onclick="closeModal(event)">
-    <div class="modal-content">
+    <div class="modal-card">
         <button class="modal-close" onclick="closeModal(event)">✕</button>
         <div class="modal-title" id="modalTitle">圖片預覽</div>
-        <img class="modal-img" id="modalImg" src="" alt="預覽圖">
+        <img id="modalImg" src="" alt="預覽圖">
     </div>
 </div>
 
 <script src="./config.js"></script>
 <script>
-// ── 狀態與初始化 ───────────────────────────────────────────
-let failedModels = [];
-let successModels = [];
-let imgCache = {};
 const API_BASE = String(window.ENERGYLABEL_API_BASE || '').replace(/\/$/, '');
 const API_PLACEHOLDER = 'https://your-render-service.onrender.com';
+const CODE_META = {
+    ok: { label: '成功', tone: 'ok' },
+    not_found: { label: '型號不存在', tone: 'err' },
+    upstream_unavailable: { label: '官網暫時故障', tone: 'warn' },
+    access_denied: { label: '官網拒絕連線', tone: 'err' },
+    image_parse_error: { label: '圖片解析失敗', tone: 'err' },
+    unknown: { label: '未知錯誤', tone: 'err' }
+};
+
+let records = [];
+let settled = [];
+let successMap = {};
+let notices = [];
+let streamSummary = { cache_hits: 0, batch_retry_count: 0 };
 
 function apiUrl(path) {
     return `${API_BASE}${path}`;
@@ -489,203 +777,211 @@ function hasConfiguredApiBase() {
     return Boolean(API_BASE) && API_BASE !== API_PLACEHOLDER;
 }
 
-async function init() {
-    updateModelCount();
-    const backendText = hasConfiguredApiBase()
-        ? API_BASE
-        : '尚未設定 Render API';
-    document.querySelector('.info-value').textContent = `瀏覽器預設下載資料夾 · API：${backendText}`;
-    
-    // 檢查是否有歷史紀錄
+function getModels() {
+    return document.getElementById('models').value
+        .split('\n')
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+function updateInputStats() {
+    const models = getModels();
+    const unique = new Set(models);
+    const hasDupes = models.length > unique.size;
+    document.getElementById('modelCount').textContent = `${models.length} 個型號`;
+    document.getElementById('dupBadge').style.display = hasDupes ? 'inline-flex' : 'none';
+    document.getElementById('dedupBtn').disabled = !hasDupes;
+    document.getElementById('clearBtn').style.display = models.length ? 'inline-flex' : 'none';
+    if (models.length) {
+        localStorage.setItem('energyLabelModels', models.join('\n'));
+        document.getElementById('historyBtn').style.display = 'inline-flex';
+    }
+}
+
+function init() {
+    const backendText = hasConfiguredApiBase() ? API_BASE : '尚未設定 Render API';
+    document.getElementById('apiBadge').textContent = backendText;
+    updateInputStats();
     if (!localStorage.getItem('energyLabelModels')) {
         document.getElementById('historyBtn').style.display = 'none';
     }
 }
 
-// ── 模型輸入與驗證 ──────────────────────────────────────────
-function getModels() {
-    return document.getElementById('models').value
-        .split('\n')
-        .map(s => s.trim())
-        .filter(Boolean);
-}
-
-function updateModelCount() {
-    const models = getModels();
-    const uniqueModels = new Set(models);
-    const hasDupes = models.length > uniqueModels.size;
-    
-    document.getElementById('modelCount').textContent = `${models.length} 個型號`;
-    document.getElementById('dupBadge').style.display = hasDupes ? 'inline-block' : 'none';
-    document.getElementById('dedupBtn').disabled = !hasDupes;
-    
-    if (models.length > 0) {
-        document.getElementById('clearBtn').style.display = 'flex';
-        localStorage.setItem('energyLabelModels', models.join('\n'));
-        document.getElementById('historyBtn').style.display = 'inline-block';
-    }
-}
-
 function removeDuplicates() {
-    const unique = [...new Set(getModels())];
-    document.getElementById('models').value = unique.join('\n');
-    updateModelCount();
+    document.getElementById('models').value = [...new Set(getModels())].join('\n');
+    updateInputStats();
 }
 
 function loadHistory() {
     const saved = localStorage.getItem('energyLabelModels');
-    if (saved) {
-        document.getElementById('models').value = saved;
-        updateModelCount();
-    }
+    if (!saved) return;
+    document.getElementById('models').value = saved;
+    updateInputStats();
 }
 
-// ── 拖曳檔案匯入 ───────────────────────────────────────────
-const dropZone = document.getElementById('dropZone');
-const textarea = document.getElementById('models');
-
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
-['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-});
-
-dropZone.addEventListener('drop', handleDrop, false);
-
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const file = dt.files[0];
-    
-    if (file && (file.name.endsWith('.txt') || file.name.endsWith('.csv'))) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            let content = e.target.result;
-            // 如果是 csv，替換逗號為換行
-            if (file.name.endsWith('.csv')) {
-                content = content.replace(/,/g, '\n');
-            }
-            const currentVal = textarea.value.trim();
-            textarea.value = currentVal ? `${currentVal}\n${content}` : content;
-            // 清理多餘空行和空白
-            textarea.value = getModels().join('\n');
-            updateModelCount();
-        };
-        reader.readAsText(file);
-    }
-}
-
-// ── 剪貼簿增強 ───────────────────────────────────────────
-textarea.addEventListener('input', updateModelCount);
-textarea.addEventListener('paste', (e) => {
-    const pasted = (e.clipboardData || window.clipboardData).getData('text');
-    if (/[,;\t]/.test(pasted)) {
-        e.preventDefault();
-        const items = pasted.split(/[,;\t\n]+/).map(s => s.trim()).filter(Boolean);
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const before = textarea.value.substring(0, start);
-        const after = textarea.value.substring(end);
-        const insert = items.join('\n');
-        textarea.value = before + insert + after;
-        textarea.selectionStart = textarea.selectionEnd = start + insert.length;
-        updateModelCount();
-    }
-});
-
-// ── API 互動 ───────────────────────────────────────────
 function clearAll() {
     document.getElementById('models').value = '';
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('resultList').innerHTML = '';
-    document.getElementById('summaryCard').style.display = 'none';
-    document.getElementById('progressContainer').style.display = 'none';
-    document.getElementById('clearBtn').style.display = 'none';
+    records = [];
+    settled = [];
+    successMap = {};
+    notices = [];
+    streamSummary = { cache_hits: 0, batch_retry_count: 0 };
+    document.getElementById('resultList').innerHTML = '<li class="empty-state" id="emptyState">輸入型號後開始抓取，這裡會顯示即時結果與下載操作。</li>';
+    document.getElementById('noticeBoard').style.display = 'none';
+    document.getElementById('noticeBoard').innerHTML = '';
+    document.getElementById('zipBtn').style.display = 'none';
+    document.getElementById('retryBtn').style.display = 'none';
     document.getElementById('downloadAllBtn').style.display = 'none';
-    failedModels = [];
-    successModels = [];
-    imgCache = {};
-    updateModelCount();
-    textarea.focus();
+    document.getElementById('progressText').textContent = '等待開始';
+    document.getElementById('progressPercent').textContent = '0%';
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('summaryTime').textContent = '尚未開始';
+    renderSummary();
+    updateInputStats();
 }
 
-function retryFailed() {
-    if (failedModels.length === 0) return;
-    document.getElementById('models').value = failedModels.join('\n');
-    updateModelCount();
-    startDownload();
+function appendNotice(message) {
+    notices.unshift(message);
+    notices = notices.slice(0, 4);
+    const board = document.getElementById('noticeBoard');
+    board.style.display = notices.length ? 'grid' : 'none';
+    board.innerHTML = notices.map(text => `<div class="notice-item">${text}</div>`).join('');
 }
 
-// ── 下載核心 ───────────────────────────────────────────
-function createResultItem(model, id) {
-    const li = document.createElement('li');
-    li.className = 'result-item';
-    li.id = id;
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'result-model';
-    nameSpan.textContent = model;
-
-    const infoDiv = document.createElement('div');
-    infoDiv.className = 'result-info';
-
-    const statusSpan = document.createElement('span');
-    statusSpan.className = 'result-status';
-
-    const dot = document.createElement('span');
-    dot.className = 'dot pending';
-    
-    const st = document.createElement('span');
-    st.className = 'st';
-    st.textContent = '搜尋中…';
-    
-    statusSpan.appendChild(dot);
-    statusSpan.appendChild(st);
-    
-    const viewBtn = document.createElement('button');
-    viewBtn.className = 'preview-btn';
-    viewBtn.title = '預覽圖片';
-    viewBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
-    viewBtn.onclick = () => openModal(model);
-
-    const dlBtn = document.createElement('button');
-    dlBtn.className = 'download-btn';
-    dlBtn.title = '下載圖片';
-    dlBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm7-18l-5.5 5.5 1.42 1.42L11 6.84V16h2V6.84l3.08 3.08 1.42-1.42L12 2z"/></svg>';
-    dlBtn.onclick = () => downloadImage(model);
-
-    infoDiv.appendChild(statusSpan);
-    infoDiv.appendChild(viewBtn);
-    infoDiv.appendChild(dlBtn);
-
-    li.appendChild(nameSpan);
-    li.appendChild(infoDiv);
-    return li;
+function createResultItem(index, model) {
+    const item = document.createElement('li');
+    item.className = 'result-item';
+    item.id = `result-${index}`;
+    item.innerHTML = `
+        <div class="result-main">
+            <div class="result-model">${model}</div>
+            <div class="result-meta">
+                <span class="status-pill status-warn result-pill">等待查詢</span>
+                <span class="tag result-tag">PENDING</span>
+            </div>
+            <div class="result-message">系統正在等待處理這一筆型號。</div>
+        </div>
+        <div class="result-actions">
+            <button class="icon-btn result-preview" title="預覽圖片">
+                <svg viewBox="0 0 24 24"><path d="M12 5c5.23 0 9.27 3.11 11 7-1.73 3.89-5.77 7-11 7S2.73 15.89 1 12c1.73-3.89 5.77-7 11-7zm0 2C8.54 7 5.52 8.96 4 12c1.52 3.04 4.54 5 8 5s6.48-1.96 8-5c-1.52-3.04-4.54-5-8-5zm0 2.2A2.8 2.8 0 1 1 9.2 12 2.8 2.8 0 0 1 12 9.2z"/></svg>
+            </button>
+            <button class="icon-btn result-download" title="下載單張圖片">
+                <svg viewBox="0 0 24 24"><path d="M12 3v10.17l3.59-3.58L17 11l-5 5-5-5 1.41-1.41L11 13.17V3h1zM5 19h14v2H5z"/></svg>
+            </button>
+        </div>
+    `;
+    item.querySelector('.result-preview').onclick = () => openModal(model);
+    item.querySelector('.result-download').onclick = () => downloadSingle(model);
+    return item;
 }
 
-// 開啟預覽
+function ensureResultList(models) {
+    const list = document.getElementById('resultList');
+    list.innerHTML = '';
+    models.forEach((model, index) => list.appendChild(createResultItem(index, model)));
+}
+
+function statusClassFor(code, status) {
+    if (status === 'ok') return 'status-ok';
+    const tone = (CODE_META[code] || CODE_META.unknown).tone;
+    if (tone === 'warn') return 'status-warn';
+    return 'status-err';
+}
+
+function describeTags(result) {
+    const tags = [];
+    if (result.cache_hit) tags.push('CACHE');
+    if (result.retries) tags.push(`RETRY ${result.retries}`);
+    if (result.batch_retry) tags.push('BATCH RETRY');
+    if (result.source === 'live') tags.push('LIVE');
+    if (!tags.length) tags.push(result.status === 'ok' ? 'READY' : 'FINAL');
+    return tags;
+}
+
+function cloneResultForReport(model, result) {
+    const copy = JSON.parse(JSON.stringify({ model, result }));
+    if (copy.result) delete copy.result.base64;
+    return copy;
+}
+
+function applyResultUpdate(index, model, result) {
+    records[index] = { model, result };
+    const item = document.getElementById(`result-${index}`);
+    if (!item) return;
+
+    const meta = CODE_META[result.code] || CODE_META.unknown;
+    const pill = item.querySelector('.result-pill');
+    const tagBox = item.querySelector('.result-tag');
+    const message = item.querySelector('.result-message');
+    const previewBtn = item.querySelector('.result-preview');
+    const downloadBtn = item.querySelector('.result-download');
+
+    pill.className = `status-pill ${statusClassFor(result.code, result.status)} result-pill`;
+    pill.textContent = meta.label;
+    tagBox.textContent = describeTags(result).join(' · ');
+    message.textContent = result.status === 'ok'
+        ? `圖片已取得，可直接預覽、單張下載或加入 ZIP。${result.cache_hit ? ' 這次使用快取結果。' : ''}`
+        : result.message;
+
+    if (result.status === 'ok' && result.base64) {
+        successMap[model] = { model, base64: result.base64 };
+        previewBtn.style.display = 'grid';
+        downloadBtn.style.display = 'grid';
+    } else {
+        delete successMap[model];
+        previewBtn.style.display = 'none';
+        downloadBtn.style.display = 'none';
+    }
+
+    renderSummary();
+}
+
+function renderSummary() {
+    const validRecords = records.filter(Boolean);
+    const okCount = validRecords.filter(item => item.result.status === 'ok').length;
+    const errCount = validRecords.filter(item => item.result.status === 'error').length;
+    const cacheCount = validRecords.filter(item => item.result.cache_hit).length;
+    const completed = settled.filter(Boolean).length;
+    const total = settled.length || validRecords.length || 0;
+    const percent = total ? Math.round((completed / total) * 100) : 0;
+
+    document.getElementById('statOk').textContent = okCount;
+    document.getElementById('statErr').textContent = errCount;
+    document.getElementById('statCache').textContent = streamSummary.cache_hits || cacheCount;
+    document.getElementById('statBatchRetry').textContent = streamSummary.batch_retry_count || 0;
+
+    document.getElementById('heroOk').textContent = okCount;
+    document.getElementById('heroErr').textContent = errCount;
+    document.getElementById('heroCache').textContent = streamSummary.cache_hits || cacheCount;
+    document.getElementById('heroProgress').textContent = `${percent}%`;
+
+    document.getElementById('zipBtn').style.display = okCount > 0 ? 'inline-flex' : 'none';
+    document.getElementById('downloadAllBtn').style.display = okCount > 0 ? 'inline-flex' : 'none';
+    document.getElementById('retryBtn').style.display = errCount > 0 ? 'inline-flex' : 'none';
+}
+
+function updateProgress(completed, total) {
+    const percent = total ? Math.round((completed / total) * 100) : 0;
+    document.getElementById('progressFill').style.width = `${percent}%`;
+    document.getElementById('progressPercent').textContent = `${percent}%`;
+    document.getElementById('progressText').textContent = total
+        ? `已完成 ${completed} / ${total} 筆型號`
+        : '等待開始';
+    document.getElementById('heroProgress').textContent = `${percent}%`;
+}
+
 function openModal(model) {
-    if (!imgCache[model]) return;
+    const item = successMap[model];
+    if (!item) return;
     document.getElementById('modalTitle').textContent = model;
-    document.getElementById('modalImg').src = 'data:image/jpeg;base64,' + imgCache[model];
+    document.getElementById('modalImg').src = `data:image/jpeg;base64,${item.base64}`;
     document.getElementById('imgModal').classList.add('show');
 }
 
-function closeModal(e) {
-    if (e.target.id === 'imgModal' || e.target.closest('.modal-close')) {
+function closeModal(event) {
+    if (event.target.id === 'imgModal' || event.target.classList.contains('modal-close')) {
         document.getElementById('imgModal').classList.remove('show');
     }
-}
-
-function safeFilename(name) {
-    return String(name || 'image').replace(/[<>:"/\\\\|?*\\s]+/g, '_');
 }
 
 function base64ToBlob(base64, contentType = 'image/jpeg') {
@@ -694,87 +990,114 @@ function base64ToBlob(base64, contentType = 'image/jpeg') {
     for (let i = 0; i < byteChars.length; i++) {
         byteNumbers[i] = byteChars.charCodeAt(i);
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: contentType });
+    return new Blob([new Uint8Array(byteNumbers)], { type: contentType });
 }
 
-function downloadImage(model) {
-    const base64 = imgCache[model];
-    if (!base64) return;
-    const blob = base64ToBlob(base64);
+function safeFilename(name) {
+    return String(name || 'energy-label').replace(/[<>:"/\\|?*\s]+/g, '_');
+}
+
+function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = safeFilename(model) + '.jpg';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1200);
 }
 
-async function downloadAll() {
-    for (const model of successModels) {
-        downloadImage(model);
-        await new Promise(r => setTimeout(r, 200));
+function downloadSingle(model) {
+    const item = successMap[model];
+    if (!item) return;
+    downloadBlob(base64ToBlob(item.base64), `${safeFilename(model)}.jpg`);
+}
+
+async function downloadAllIndividually() {
+    const items = Object.values(successMap);
+    for (const item of items) {
+        downloadSingle(item.model);
+        await new Promise(resolve => setTimeout(resolve, 160));
     }
 }
 
-async function startDownload() {
-    const btn = document.getElementById('dlBtn');
+async function downloadZipBundle() {
+    const items = Object.values(successMap);
+    if (!items.length) {
+        alert('目前沒有可打包的成功圖檔。');
+        return;
+    }
+    const payload = {
+        bundle_name: `energy-labels-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}`,
+        items,
+        results: records.filter(Boolean).map(entry => cloneResultForReport(entry.model, entry.result))
+    };
+    try {
+        const resp = await fetch(apiUrl('/api/download-zip'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error(await resp.text() || `HTTP ${resp.status}`);
+        const blob = await resp.blob();
+        const disposition = resp.headers.get('Content-Disposition') || '';
+        const match = disposition.match(/filename="([^"]+)"/);
+        downloadBlob(blob, match ? match[1] : 'energy-labels.zip');
+    } catch (error) {
+        alert(`ZIP 下載失敗：${error.message}`);
+    }
+}
+
+function retryTransient() {
+    const retryModels = records
+        .filter(Boolean)
+        .filter(entry => entry.result.status === 'error')
+        .map(entry => entry.model);
+    if (!retryModels.length) return;
+    document.getElementById('models').value = retryModels.join('\n');
+    updateInputStats();
+    startBatch();
+}
+
+async function startBatch() {
     const models = getModels();
-    if (!models.length) { textarea.focus(); return; }
+    if (!models.length) {
+        document.getElementById('models').focus();
+        return;
+    }
     if (!hasConfiguredApiBase()) {
         alert('尚未設定 Render API，請先修改 public/config.js');
         return;
     }
 
-    // UI 重置
-    btn.classList.add('loading');
-    btn.disabled = true;
-    document.getElementById('clearBtn').disabled = true;
-    
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('summaryCard').style.display = 'none';
-    const list = document.getElementById('resultList');
-    list.innerHTML = '';
-    
-    failedModels = [];
-    successModels = [];
-    
-    // 進度條
-    const progContainer = document.getElementById('progressContainer');
-    const progFill = document.getElementById('progressFill');
-    const progText = document.getElementById('progressText');
-    const progPercent = document.getElementById('progressPercent');
-    progContainer.style.display = 'block';
-    progFill.style.width = '0%';
-    progText.textContent = '準備中…';
-    progPercent.textContent = '0%';
-
-    // 建立清單
-    const itemIds = [];
-    models.forEach((m, i) => {
-        const id = 'r_' + i + '_' + Math.random().toString(36).substr(2, 4);
-        itemIds.push(id);
-        const li = createResultItem(m, id);
-        li.style.animationDelay = `${i * 0.05}s`; // 階層進場動畫
-        list.appendChild(li);
-    });
-
     const startTime = Date.now();
-    let okCount = 0;
-    let errCount = 0;
-    let completed = 0;
+    records = new Array(models.length);
+    settled = new Array(models.length).fill(false);
+    successMap = {};
+    notices = [];
+    streamSummary = { cache_hits: 0, batch_retry_count: 0 };
+    ensureResultList(models);
+    document.getElementById('noticeBoard').innerHTML = '';
+    document.getElementById('noticeBoard').style.display = 'none';
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('zipBtn').style.display = 'none';
+    document.getElementById('retryBtn').style.display = 'none';
+    document.getElementById('downloadAllBtn').style.display = 'none';
+    updateProgress(0, models.length);
+    renderSummary();
 
     try {
-        const resp = await fetch(apiUrl('/api/download-stream'), {
+        const response = await fetch(apiUrl('/api/download-stream'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ models })
         });
-        if (!resp.ok) throw new Error(await resp.text() || `HTTP ${resp.status}`);
+        if (!response.ok) {
+            throw new Error(await response.text() || `HTTP ${response.status}`);
+        }
 
-        const reader = resp.body.getReader();
+        const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
 
@@ -782,9 +1105,8 @@ async function startDownload() {
             const { value, done } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value, { stream: true });
-
             const parts = buffer.split('\n\n');
-            buffer = parts.pop(); 
+            buffer = parts.pop();
 
             for (const part of parts) {
                 const line = part.trim();
@@ -792,80 +1114,88 @@ async function startDownload() {
                 const payload = line.slice(6);
                 if (payload === '[DONE]') continue;
 
-                try {
-                    const { index, model, result } = JSON.parse(payload);
-                    const li = document.getElementById(itemIds[index]);
-                    if (!li) continue;
-
-                    const dot = li.querySelector('.dot');
-                    const st  = li.querySelector('.st');
-                    dot.className = 'dot';
-
-                    if (result.status === 'ok') {
-                        dot.classList.add('ok');
-                        st.textContent = result.retries ? `已取得 ✓（重試 ${result.retries} 次）` : '已取得 ✓';
-                        okCount++;
-                        if (result.base64) {
-                            imgCache[model] = result.base64;
-                            li.querySelector('.preview-btn').style.display = 'block';
-                            li.querySelector('.download-btn').style.display = 'block';
-                            successModels.push(model);
-                        }
-                    } else {
-                        dot.classList.add('err');
-                        st.textContent = result.message;
-                        st.classList.add('err-msg');
-                        errCount++;
-                        failedModels.push(model);
+                const data = JSON.parse(payload);
+                if (data.type === 'notice') {
+                    appendNotice(data.message);
+                    continue;
+                }
+                if (data.type === 'summary') {
+                    streamSummary = data;
+                    renderSummary();
+                    continue;
+                }
+                if (data.type === 'result') {
+                    if (!settled[data.index]) {
+                        settled[data.index] = true;
                     }
-
-                    completed++;
-                    const pct = Math.round((completed / models.length) * 100);
-                    progFill.style.width = pct + '%';
-                    progText.textContent = `${completed} / ${models.length}`;
-                    progPercent.textContent = pct + '%';
-
-                    li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } catch (e) {
-                    console.error('JSON Parse Error:', e);
+                    applyResultUpdate(data.index, data.model, data.result);
+                    updateProgress(settled.filter(Boolean).length, models.length);
                 }
             }
         }
-    } catch (e) {
-        alert('連線錯誤：' + e.message);
+    } catch (error) {
+        appendNotice(`批次流程中斷：${error.message}`);
+        alert(`連線錯誤：${error.message}`);
     } finally {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        document.getElementById('clearBtn').disabled = false;
-        
-        // 修正 100% 顯示
-        progFill.style.width = '100%';
-        progPercent.textContent = '100%';
-
-        // 更新統計圖卡
-        document.getElementById('statOk').textContent = okCount;
-        document.getElementById('statErr').textContent = errCount;
+        document.getElementById('runBtn').disabled = false;
         document.getElementById('summaryTime').textContent = `總耗時 ${((Date.now() - startTime) / 1000).toFixed(1)} 秒`;
-        
-        document.getElementById('retryBtn').style.display = errCount > 0 ? 'flex' : 'none';
-        document.getElementById('summaryCard').style.display = 'block';
-        document.getElementById('downloadAllBtn').style.display = okCount > 0 ? 'flex' : 'none';
-
-        setTimeout(() => {
-            progContainer.style.display = 'none';
-            // 捲動到總結區
-            document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }, 1200);
+        updateProgress(settled.filter(Boolean).length, models.length);
+        renderSummary();
     }
 }
 
-// 註冊 ESC 關閉 Modal
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') document.getElementById('imgModal').classList.remove('show');
+const dropZone = document.getElementById('dropZone');
+const textarea = document.getElementById('models');
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, event => {
+        event.preventDefault();
+        event.stopPropagation();
+    });
+});
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'));
+});
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'));
+});
+dropZone.addEventListener('drop', event => {
+    const file = event.dataTransfer.files[0];
+    if (!file || (!file.name.endsWith('.txt') && !file.name.endsWith('.csv'))) return;
+    const reader = new FileReader();
+    reader.onload = loadEvent => {
+        let content = String(loadEvent.target.result || '');
+        if (file.name.endsWith('.csv')) content = content.replace(/,/g, '\n');
+        const current = textarea.value.trim();
+        textarea.value = current ? `${current}\n${content}` : content;
+        textarea.value = getModels().join('\n');
+        updateInputStats();
+    };
+    reader.readAsText(file);
+});
+
+textarea.addEventListener('input', updateInputStats);
+textarea.addEventListener('paste', event => {
+    const pasted = (event.clipboardData || window.clipboardData).getData('text');
+    if (!/[,;\t]/.test(pasted)) return;
+    event.preventDefault();
+    const items = pasted.split(/[,;\t\n]+/).map(item => item.trim()).filter(Boolean);
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const before = textarea.value.slice(0, start);
+    const after = textarea.value.slice(end);
+    const insert = items.join('\n');
+    textarea.value = before + insert + after;
+    textarea.selectionStart = textarea.selectionEnd = start + insert.length;
+    updateInputStats();
+});
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+        document.getElementById('imgModal').classList.remove('show');
+    }
 });
 
 window.addEventListener('DOMContentLoaded', init);
 </script>
-
 </body>
 </html>

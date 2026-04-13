@@ -15,3 +15,11 @@ services:
         value: 5
       - key: BACKOFF_BASE_MS
         value: 1200
+      - key: CACHE_TTL_SECONDS
+        value: 900
+      - key: BATCH_COOLDOWN_SECONDS
+        value: 30
+      - key: BATCH_RETRY_MIN_ERRORS
+        value: 2
+      - key: BATCH_RETRY_RATIO
+        value: 0.35
