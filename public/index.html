@@ -472,14 +472,29 @@ textarea::placeholder { color: var(--border); }
     </div>
 </div>
 
+<script src="./config.js"></script>
 <script>
 // ── 狀態與初始化 ───────────────────────────────────────────
 let failedModels = [];
 let successModels = [];
 let imgCache = {};
+const API_BASE = String(window.ENERGYLABEL_API_BASE || '').replace(/\/$/, '');
+const API_PLACEHOLDER = 'https://your-render-service.onrender.com';
+
+function apiUrl(path) {
+    return `${API_BASE}${path}`;
+}
+
+function hasConfiguredApiBase() {
+    return Boolean(API_BASE) && API_BASE !== API_PLACEHOLDER;
+}
 
 async function init() {
     updateModelCount();
+    const backendText = hasConfiguredApiBase()
+        ? API_BASE
+        : '尚未設定 Render API';
+    document.querySelector('.info-value').textContent = `瀏覽器預設下載資料夾 · API：${backendText}`;
     
     // 檢查是否有歷史紀錄
     if (!localStorage.getItem('energyLabelModels')) {
@@ -708,6 +723,10 @@ async function startDownload() {
     const btn = document.getElementById('dlBtn');
     const models = getModels();
     if (!models.length) { textarea.focus(); return; }
+    if (!hasConfiguredApiBase()) {
+        alert('尚未設定 Render API，請先修改 public/config.js');
+        return;
+    }
 
     // UI 重置
     btn.classList.add('loading');
@@ -748,7 +767,7 @@ async function startDownload() {
     let completed = 0;
 
     try {
-        const resp = await fetch('/api/download-stream', {
+        const resp = await fetch(apiUrl('/api/download-stream'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ models })
