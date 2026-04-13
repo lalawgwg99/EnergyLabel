@@ -75,14 +75,38 @@ function parseHiddenFields(html) {
   return fields;
 }
 
+function normalizeFetchError(err) {
+  const msg = String(err?.message || err || '');
+  const retryableMatch = msg.match(/^RETRYABLE_HTTP_(\d{3})$/);
+  if (retryableMatch) {
+    return `官網連線逾時或忙碌中 (HTTP ${retryableMatch[1]})`;
+  }
+  if (msg.toLowerCase().includes('fetch failed')) {
+    return '官網連線失敗（可能暫時無法連線）';
+  }
+  return msg || '官網連線失敗';
+}
+
+function httpStatusToError(status) {
+  if (RETRYABLE_HTTP_CODES.has(status)) {
+    return `官網連線逾時或忙碌中 (HTTP ${status})`;
+  }
+  if (status === 403 || status === 401) {
+    return `官網拒絕存取 (HTTP ${status})`;
+  }
+  return `官網回應異常 (HTTP ${status})`;
+}
+
 async function aspnetPostSearch(model) {
   const url = `${TARGET}/list.aspx`;
-  const page = await fetch(url, { headers: HEADERS, redirect: 'follow' });
+  let page;
+  try {
+    page = await fetch(url, { headers: HEADERS, redirect: 'follow' });
+  } catch (e) {
+    return { html: null, error: normalizeFetchError(e) };
+  }
   if (!page.ok) {
-    if (RETRYABLE_HTTP_CODES.has(page.status)) {
-      throw new Error(`RETRYABLE_HTTP_${page.status}`);
-    }
-    return null;
+    return { html: null, error: httpStatusToError(page.status) };
   }
   const html = await page.text();
   const form = parseHiddenFields(html);
@@ -99,19 +123,21 @@ async function aspnetPostSearch(model) {
   form['ctl00$CPage$btnSearch'] = '查  詢';
 
   const body = new URLSearchParams(form);
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { ...HEADERS, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-    redirect: 'follow',
-  });
-  if (!resp.ok) {
-    if (RETRYABLE_HTTP_CODES.has(resp.status)) {
-      throw new Error(`RETRYABLE_HTTP_${resp.status}`);
-    }
-    return null;
+  let resp;
+  try {
+    resp = await fetch(url, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      redirect: 'follow',
+    });
+  } catch (e) {
+    return { html: null, error: normalizeFetchError(e) };
   }
-  return await resp.text();
+  if (!resp.ok) {
+    return { html: null, error: httpStatusToError(resp.status) };
+  }
+  return { html: await resp.text(), error: null };
 }
 
 async function getSearchFallback(model) {
@@ -120,37 +146,40 @@ async function getSearchFallback(model) {
     `key2=${encodeURIComponent(model)}&Type=&RANK=&con=`,
     `key2=${encodeURIComponent(model)}&Type=0&RANK=0&con=0`,
   ];
+  let lastError = null;
   for (const params of combos) {
     try {
       const r = await fetch(`${TARGET}/list.aspx?${params}`, { headers: HEADERS, redirect: 'follow' });
       if (!r.ok) {
-        if (RETRYABLE_HTTP_CODES.has(r.status)) {
-          throw new Error(`RETRYABLE_HTTP_${r.status}`);
-        }
+        lastError = httpStatusToError(r.status);
         continue;
       }
       const html = await r.text();
       const rows = extractRows(html);
       const links = extractLinks(html);
-      if (links.length) return { html, rows, links };
-    } catch {
-      continue;
+      if (links.length) return { html, rows, links, error: null };
+    } catch (e) {
+      lastError = normalizeFetchError(e);
     }
   }
-  return { html: null, rows: [], links: [] };
+  return { html: null, rows: [], links: [], error: lastError };
 }
 
 async function fetchImageOnce(model) {
   try {
-    const { rows: fallbackRows, links: fallbackLinks } = await getSearchFallback(model);
+    const { rows: fallbackRows, links: fallbackLinks, error: fallbackError } = await getSearchFallback(model);
     let picked = pickBestLink(fallbackRows, fallbackLinks, model);
 
     if (!picked) {
-      const postHtml = await aspnetPostSearch(model);
-      if (postHtml) {
-        const rows = extractRows(postHtml);
-        const links = extractLinks(postHtml);
+      const postResult = await aspnetPostSearch(model);
+      if (postResult?.html) {
+        const rows = extractRows(postResult.html);
+        const links = extractLinks(postResult.html);
         picked = pickBestLink(rows, links, model);
+      } else if (postResult?.error) {
+        return { status: 'error', message: postResult.error };
+      } else if (fallbackError) {
+        return { status: 'error', message: fallbackError };
       }
     }
 
@@ -177,12 +206,7 @@ async function fetchImageOnce(model) {
 
     return { status: 'ok', base64: srcMatch[1].trim() };
   } catch (e) {
-    const msg = String(e?.message || '');
-    const match = msg.match(/^RETRYABLE_HTTP_(\d{3})$/);
-    if (match) {
-      return { status: 'error', message: `官網連線逾時或忙碌中 (HTTP ${match[1]})` };
-    }
-    return { status: 'error', message: String(e) };
+    return { status: 'error', message: normalizeFetchError(e) };
   }
 }
 
