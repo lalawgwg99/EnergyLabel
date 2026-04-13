@@ -385,6 +385,19 @@ textarea::placeholder { color: #98a2ad; }
     line-height: 1.6;
     border: 1px solid rgba(15, 111, 255, 0.12);
 }
+.notice-item.notice-batch_cooldown {
+    background: rgba(255, 159, 28, 0.12);
+    color: #9f5d00;
+    border-color: rgba(255, 159, 28, 0.24);
+}
+.notice-item.notice-batch_retry {
+    background: rgba(18, 184, 134, 0.12);
+    color: #0d8a64;
+    border-color: rgba(18, 184, 134, 0.22);
+}
+.notice-item.notice-general {
+    background: rgba(15, 111, 255, 0.08);
+}
 .results-card { padding: 24px; }
 .results-head {
     display: flex;
@@ -414,6 +427,29 @@ textarea::placeholder { color: #98a2ad; }
     border: 1px solid var(--line);
     background: rgba(255,255,255,0.7);
     padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+}
+.result-item::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: rgba(28, 35, 41, 0.08);
+}
+.result-item.result-success::before {
+    background: linear-gradient(180deg, #12b886 0%, #69dbb0 100%);
+}
+.result-item.result-error::before {
+    background: linear-gradient(180deg, #ef4444 0%, #f97316 100%);
+}
+.result-item.cache-hit {
+    background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248, 253, 251, 0.95));
+    box-shadow: inset 0 0 0 1px rgba(18, 184, 134, 0.12);
+}
+.result-item.batch-retried {
+    background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(245, 250, 255, 0.96));
+    box-shadow: inset 0 0 0 1px rgba(15, 111, 255, 0.12);
 }
 .result-main {
     min-width: 0;
@@ -465,6 +501,45 @@ textarea::placeholder { color: #98a2ad; }
     line-height: 1.7;
     color: var(--muted);
 }
+.result-signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+.signal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+.signal-chip::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: currentColor;
+}
+.signal-chip.signal-cache {
+    background: rgba(18, 184, 134, 0.14);
+    color: #0d8a64;
+}
+.signal-chip.signal-batch {
+    background: rgba(15, 111, 255, 0.12);
+    color: var(--brand-dark);
+}
+.signal-chip.signal-retry {
+    background: rgba(255, 159, 28, 0.14);
+    color: #9f5d00;
+}
+.signal-chip.signal-live {
+    background: rgba(28, 35, 41, 0.08);
+    color: #48515b;
+}
 .result-actions {
     display: flex;
     align-items: center;
@@ -497,6 +572,17 @@ textarea::placeholder { color: #98a2ad; }
     padding: 16px;
     background: rgba(255,255,255,0.82);
     border: 1px solid var(--line);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.summary-box.emphasis-cache {
+    border-color: rgba(18, 184, 134, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(18, 184, 134, 0.12);
+    transform: translateY(-1px);
+}
+.summary-box.emphasis-batch {
+    border-color: rgba(15, 111, 255, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(15, 111, 255, 0.12);
+    transform: translateY(-1px);
 }
 .summary-box .metric-value {
     font-size: 30px;
@@ -504,6 +590,19 @@ textarea::placeholder { color: #98a2ad; }
 }
 .summary-box .metric-label {
     margin-bottom: 2px;
+}
+.summary-flag {
+    display: none;
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.summary-box.emphasis-cache .summary-flag,
+.summary-box.emphasis-batch .summary-flag {
+    display: block;
 }
 .footer-actions {
     display: flex;
@@ -622,17 +721,17 @@ textarea::placeholder { color: #98a2ad; }
                     <div class="metric-value err" id="heroErr">0</div>
                     <p class="metric-hint">包含型號不存在、官網故障、拒絕連線與圖片解析失敗。</p>
                 </section>
-                <section class="metric-card">
-                    <div class="metric-label">快取命中</div>
-                    <div class="metric-value warn" id="heroCache">0</div>
-                    <p class="metric-hint">短時間重查同型號時會直接回用已抓到的結果。</p>
-                </section>
-                <section class="metric-card">
-                    <div class="metric-label">批次進度</div>
-                    <div class="metric-value" id="heroProgress">0%</div>
-                    <p class="metric-hint">系統會在大量暫時錯誤時自動冷卻後再做第二輪批次重試。</p>
-                </section>
-            </div>
+            <section class="metric-card">
+                <div class="metric-label">快取命中</div>
+                <div class="metric-value warn" id="heroCache">0</div>
+                <p class="metric-hint" id="heroCacheHint">短時間重查同型號時會直接回用已抓到的結果。</p>
+            </section>
+            <section class="metric-card">
+                <div class="metric-label">批次進度</div>
+                <div class="metric-value" id="heroProgress">0%</div>
+                <p class="metric-hint" id="heroBatchHint">系統會在大量暫時錯誤時自動冷卻後再做第二輪批次重試。</p>
+            </section>
+        </div>
         </aside>
     </section>
 
@@ -732,11 +831,13 @@ textarea::placeholder { color: #98a2ad; }
                 <div class="metric-label">快取命中</div>
                 <div class="metric-value warn" id="statCache">0</div>
                 <div class="metric-hint">免重打官網</div>
+                <div class="summary-flag" id="cacheFlag">本輪已有快取加速</div>
             </div>
-            <div class="summary-box">
+            <div class="summary-box" id="batchRetryBox">
                 <div class="metric-label">批次重跑</div>
                 <div class="metric-value" id="statBatchRetry">0</div>
                 <div class="metric-hint">冷卻後補跑筆數</div>
+                <div class="summary-flag" id="batchFlag">系統已啟動補跑</div>
             </div>
         </div>
     </section>
@@ -845,7 +946,7 @@ function appendNotice(message) {
     notices = notices.slice(0, 4);
     const board = document.getElementById('noticeBoard');
     board.style.display = notices.length ? 'grid' : 'none';
-    board.innerHTML = notices.map(text => `<div class="notice-item">${text}</div>`).join('');
+    board.innerHTML = notices.map(item => `<div class="notice-item notice-${item.stage || 'general'}">${item.message}</div>`).join('');
 }
 
 function createResultItem(index, model) {
@@ -860,6 +961,7 @@ function createResultItem(index, model) {
                 <span class="tag result-tag">PENDING</span>
             </div>
             <div class="result-message">系統正在等待處理這一筆型號。</div>
+            <div class="result-signals"></div>
         </div>
         <div class="result-actions">
             <button class="icon-btn result-preview" title="預覽圖片">
@@ -913,8 +1015,14 @@ function applyResultUpdate(index, model, result) {
     const pill = item.querySelector('.result-pill');
     const tagBox = item.querySelector('.result-tag');
     const message = item.querySelector('.result-message');
+    const signals = item.querySelector('.result-signals');
     const previewBtn = item.querySelector('.result-preview');
     const downloadBtn = item.querySelector('.result-download');
+
+    item.classList.toggle('result-success', result.status === 'ok');
+    item.classList.toggle('result-error', result.status === 'error');
+    item.classList.toggle('cache-hit', Boolean(result.cache_hit));
+    item.classList.toggle('batch-retried', Boolean(result.batch_retry));
 
     pill.className = `status-pill ${statusClassFor(result.code, result.status)} result-pill`;
     pill.textContent = meta.label;
@@ -922,6 +1030,12 @@ function applyResultUpdate(index, model, result) {
     message.textContent = result.status === 'ok'
         ? `圖片已取得，可直接預覽、單張下載或加入 ZIP。${result.cache_hit ? ' 這次使用快取結果。' : ''}`
         : result.message;
+    signals.innerHTML = [
+        result.cache_hit ? '<span class="signal-chip signal-cache">快取命中</span>' : '',
+        result.batch_retry ? '<span class="signal-chip signal-batch">批次補跑</span>' : '',
+        result.retries ? `<span class="signal-chip signal-retry">單筆重試 ${result.retries} 次</span>` : '',
+        result.status === 'ok' && !result.cache_hit ? '<span class="signal-chip signal-live">即時抓取</span>' : ''
+    ].filter(Boolean).join('');
 
     if (result.status === 'ok' && result.base64) {
         successMap[model] = { model, base64: result.base64 };
@@ -954,6 +1068,14 @@ function renderSummary() {
     document.getElementById('heroErr').textContent = errCount;
     document.getElementById('heroCache').textContent = streamSummary.cache_hits || cacheCount;
     document.getElementById('heroProgress').textContent = `${percent}%`;
+    document.getElementById('heroCacheHint').textContent = (streamSummary.cache_hits || cacheCount) > 0
+        ? '本輪已有資料直接由快取回用，查詢速度更快。'
+        : '短時間重查同型號時會直接回用已抓到的結果。';
+    document.getElementById('heroBatchHint').textContent = (streamSummary.batch_retry_count || 0) > 0
+        ? `本輪曾啟動批次補跑，共覆寫 ${streamSummary.batch_retry_count} 筆暫時性失敗。`
+        : '系統會在大量暫時錯誤時自動冷卻後再做第二輪批次重試。';
+    document.getElementById('statCache').closest('.summary-box').classList.toggle('emphasis-cache', (streamSummary.cache_hits || cacheCount) > 0);
+    document.getElementById('batchRetryBox').classList.toggle('emphasis-batch', (streamSummary.batch_retry_count || 0) > 0);
 
     document.getElementById('zipBtn').style.display = okCount > 0 ? 'inline-flex' : 'none';
     document.getElementById('downloadAllBtn').style.display = okCount > 0 ? 'inline-flex' : 'none';
@@ -1116,7 +1238,7 @@ async function startBatch() {
 
                 const data = JSON.parse(payload);
                 if (data.type === 'notice') {
-                    appendNotice(data.message);
+                    appendNotice({ stage: data.stage, message: data.message });
                     continue;
                 }
                 if (data.type === 'summary') {
