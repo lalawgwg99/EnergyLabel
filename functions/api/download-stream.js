@@ -6,6 +6,8 @@ const HEADERS = {
   'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8',
   'Referer': `${TARGET}/list.aspx`,
 };
+const MAX_ATTEMPTS = 3;
+const BACKOFF_BASE_MS = 700;
 
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -122,9 +124,9 @@ async function getSearchFallback(model) {
   return { html: null, rows: [], links: [] };
 }
 
-async function fetchImage(model) {
+async function fetchImageOnce(model) {
   try {
-    const { html: fallbackHtml, rows: fallbackRows, links: fallbackLinks } = await getSearchFallback(model);
+    const { rows: fallbackRows, links: fallbackLinks } = await getSearchFallback(model);
     let picked = pickBestLink(fallbackRows, fallbackLinks, model);
 
     if (!picked) {
@@ -162,6 +164,40 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function shouldRetry(result) {
+  if (!result || result.status !== 'error') return false;
+  const msg = String(result.message || '');
+  if (msg.includes('找不到此型號')) return false;
+  if (msg.includes('無法解析產品連結')) return false;
+  return true;
+}
+
+function retryBackoffMs(retryIndex) {
+  return BACKOFF_BASE_MS * (2 ** retryIndex);
+}
+
+async function fetchImageWithRetry(model) {
+  let result = await fetchImageOnce(model);
+  let attempts = 1;
+
+  while (attempts < MAX_ATTEMPTS && shouldRetry(result)) {
+    const retryIndex = attempts - 1;
+    await sleep(retryBackoffMs(retryIndex));
+    attempts += 1;
+    result = await fetchImageOnce(model);
+  }
+
+  if (attempts > 1 && result.status === 'error') {
+    return { ...result, message: `${result.message}（已重試 ${attempts - 1} 次）` };
+  }
+
+  if (attempts > 1 && result.status === 'ok') {
+    return { ...result, retries: attempts - 1 };
+  }
+
+  return result;
+}
+
 export async function onRequest(context) {
   if (context.request.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
@@ -183,7 +219,7 @@ export async function onRequest(context) {
     async start(controller) {
       for (let i = 0; i < models.length; i++) {
         const model = models[i];
-        const result = await fetchImage(model);
+        const result = await fetchImageWithRetry(model);
         const payload = JSON.stringify({ index: i, model, result });
         controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
         if (i < models.length - 1) await sleep(800);

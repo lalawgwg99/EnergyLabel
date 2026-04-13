@@ -784,7 +784,7 @@ async function startDownload() {
 
                     if (result.status === 'ok') {
                         dot.classList.add('ok');
-                        st.textContent = '已取得 ✓';
+                        st.textContent = result.retries ? `已取得 ✓（重試 ${result.retries} 次）` : '已取得 ✓';
                         okCount++;
                         if (result.base64) {
                             imgCache[model] = result.base64;
