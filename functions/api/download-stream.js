@@ -1,0 +1,204 @@
+const TARGET = 'https://ranking.energylabel.org.tw/product/Approval';
+
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8',
+  'Referer': `${TARGET}/list.aspx`,
+};
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function stripTags(html) {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function extractRows(html) {
+  const rows = [];
+  const rowMatches = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
+  for (const row of rowMatches) {
+    const hrefMatch = row.match(/href=["']([^"']*upt\.aspx\?[^"']*id=\d+[^"']*)["']/i);
+    if (!hrefMatch) continue;
+    const text = stripTags(row);
+    rows.push({ href: hrefMatch[1], text });
+  }
+  return rows;
+}
+
+function extractLinks(html) {
+  const links = [];
+  const re = /href=["']([^"']*upt\.aspx\?[^"']*id=\d+[^"']*)["']/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    links.push(m[1]);
+  }
+  return links;
+}
+
+function pickBestLink(rows, links, model) {
+  if (!links || links.length === 0) return null;
+  const modelNorm = (model || '').replace(/\s+/g, '').toUpperCase();
+  if (!modelNorm) return links[0];
+
+  const scored = [];
+  for (const row of rows) {
+    const rowText = (row.text || '').toUpperCase();
+    let score = 0;
+    if (rowText.includes(modelNorm)) score += 10;
+    const tokenRe = new RegExp(`(^|[^A-Z0-9])${escapeRegExp(modelNorm)}(?![A-Z0-9])`);
+    if (tokenRe.test(rowText)) score += 5;
+    if (score) scored.push({ score, href: row.href });
+  }
+  if (scored.length) {
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0].href;
+  }
+
+  if (links.length === 1) return links[0];
+  return null;
+}
+
+function parseHiddenFields(html) {
+  const fields = {};
+  const inputs = html.match(/<input[^>]*type=["']hidden["'][^>]*>/gi) || [];
+  for (const input of inputs) {
+    const nameMatch = input.match(/name=["']([^"']+)["']/i);
+    if (!nameMatch) continue;
+    const valueMatch = input.match(/value=["']([^"']*)["']/i);
+    fields[nameMatch[1]] = valueMatch ? valueMatch[1] : '';
+  }
+  return fields;
+}
+
+async function aspnetPostSearch(model) {
+  const url = `${TARGET}/list.aspx`;
+  const page = await fetch(url, { headers: HEADERS, redirect: 'follow' });
+  if (!page.ok) return null;
+  const html = await page.text();
+  const form = parseHiddenFields(html);
+
+  form['ctl00$CPage$key2'] = model;
+  form['ctl00$CPage$key'] = '';
+  form['ctl00$CPage$Type'] = '';
+  form['ctl00$CPage$RANK'] = '';
+  form['ctl00$CPage$comp'] = '0';
+  form['ctl00$CPage$approvedateA'] = '';
+  form['ctl00$CPage$approvedateB'] = '';
+  form['ctl00$CPage$condiA'] = '';
+  form['ctl00$CPage$condiB'] = '';
+  form['ctl00$CPage$btnSearch'] = '查  詢';
+
+  const body = new URLSearchParams(form);
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+    redirect: 'follow',
+  });
+  if (!resp.ok) return null;
+  return await resp.text();
+}
+
+async function getSearchFallback(model) {
+  const combos = [
+    `key2=${encodeURIComponent(model)}`,
+    `key2=${encodeURIComponent(model)}&Type=&RANK=&con=`,
+    `key2=${encodeURIComponent(model)}&Type=0&RANK=0&con=0`,
+  ];
+  for (const params of combos) {
+    try {
+      const r = await fetch(`${TARGET}/list.aspx?${params}`, { headers: HEADERS, redirect: 'follow' });
+      if (!r.ok) continue;
+      const html = await r.text();
+      const rows = extractRows(html);
+      const links = extractLinks(html);
+      if (links.length) return { html, rows, links };
+    } catch {
+      continue;
+    }
+  }
+  return { html: null, rows: [], links: [] };
+}
+
+async function fetchImage(model) {
+  try {
+    const { html: fallbackHtml, rows: fallbackRows, links: fallbackLinks } = await getSearchFallback(model);
+    let picked = pickBestLink(fallbackRows, fallbackLinks, model);
+
+    if (!picked) {
+      const postHtml = await aspnetPostSearch(model);
+      if (postHtml) {
+        const rows = extractRows(postHtml);
+        const links = extractLinks(postHtml);
+        picked = pickBestLink(rows, links, model);
+      }
+    }
+
+    if (!picked) return { status: 'error', message: '找不到此型號（官網搜尋無結果）' };
+
+    const p0 = picked.match(/p0=(\d+)/i);
+    const id = picked.match(/id=(\d+)/i);
+    if (!p0 || !id) return { status: 'error', message: '無法解析產品連結' };
+
+    const imgUrl = `${TARGET}/ImgViewer.ashx?applyID=${id[1]}&goodID=${p0[1]}`;
+    const imgResp = await fetch(imgUrl, { headers: HEADERS, redirect: 'follow' });
+    if (!imgResp.ok) return { status: 'error', message: `HTTP ${imgResp.status}` };
+    const imgHtml = await imgResp.text();
+
+    const srcMatch = imgHtml.match(/src=["']data:image\/(?:jpeg|jpg);base64,([^"']+)["']/i);
+    if (!srcMatch || !srcMatch[1] || srcMatch[1].length < 100) {
+      return { status: 'error', message: '無法取得圖檔（頁面未回傳圖片）' };
+    }
+
+    return { status: 'ok', base64: srcMatch[1].trim() };
+  } catch (e) {
+    return { status: 'error', message: String(e) };
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export async function onRequest(context) {
+  if (context.request.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+
+  let body;
+  try {
+    body = await context.request.json();
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  const models = Array.isArray(body.models) ? body.models.map(m => String(m || '').trim()).filter(Boolean) : [];
+  if (!models.length) return new Response('未提供型號', { status: 400 });
+
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      for (let i = 0; i < models.length; i++) {
+        const model = models[i];
+        const result = await fetchImage(model);
+        const payload = JSON.stringify({ index: i, model, result });
+        controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
+        if (i < models.length - 1) await sleep(800);
+      }
+      controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+      controller.close();
+    }
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    }
+  });
+}
