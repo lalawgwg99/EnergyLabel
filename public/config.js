@@ -1,1 +1,1 @@
-window.ENERGYLABEL_API_BASE = "https://your-render-service.onrender.com";
+window.ENERGYLABEL_API_BASE = "https://energylabel-1.onrender.com";
