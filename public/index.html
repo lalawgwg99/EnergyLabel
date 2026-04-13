@@ -40,11 +40,6 @@ body {
     display: grid;
     gap: 24px;
 }
-.hero {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 24px;
-}
 .hero-card,
 .panel {
     background: var(--panel);
@@ -105,38 +100,7 @@ body {
     line-height: 1.8;
     color: var(--muted);
     max-width: 52ch;
-    margin-bottom: 20px;
-}
-.chip-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.chip {
-    border-radius: 999px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    border: 1px solid rgba(15, 111, 255, 0.12);
-    background: rgba(255, 255, 255, 0.76);
-    color: var(--brand-dark);
-}
-.hero-side {
-    display: grid;
-    gap: 16px;
-}
-.metric-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-}
-.metric-card {
-    border-radius: 24px;
-    padding: 22px;
-    background: var(--panel);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow: var(--shadow);
+    margin-bottom: 0;
 }
 .metric-label {
     font-size: 12px;
@@ -162,11 +126,6 @@ body {
 .panel {
     border-radius: var(--radius-xl);
     padding: 24px;
-}
-.workspace {
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 24px;
 }
 .section-title {
     display: flex;
@@ -298,45 +257,6 @@ textarea::placeholder { color: #98a2ad; }
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-}
-.side-stack {
-    display: grid;
-    gap: 16px;
-}
-.info-card {
-    border-radius: 24px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248, 251, 255, 0.78));
-    border: 1px solid rgba(255,255,255,0.8);
-    padding: 20px;
-}
-.info-card h3 {
-    font-size: 16px;
-    margin-bottom: 8px;
-}
-.info-card p,
-.info-card li {
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--muted);
-}
-.info-card ul {
-    list-style: none;
-    display: grid;
-    gap: 8px;
-    margin-top: 10px;
-}
-.api-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 700;
-    background: rgba(15, 111, 255, 0.08);
-    color: var(--brand-dark);
-    margin-top: 14px;
-    word-break: break-all;
 }
 .progress-card,
 .results-card {
@@ -663,10 +583,6 @@ textarea::placeholder { color: #98a2ad; }
 }
 @media (max-width: 960px) {
     body { padding: 18px; }
-    .hero,
-    .workspace {
-        grid-template-columns: 1fr;
-    }
     .summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -674,7 +590,6 @@ textarea::placeholder { color: #98a2ad; }
 @media (max-width: 640px) {
     .hero-card,
     .panel { padding: 20px; }
-    .metric-grid,
     .summary-grid { grid-template-columns: 1fr; }
     .results-head,
     .progress-top,
@@ -699,96 +614,38 @@ textarea::placeholder { color: #98a2ad; }
                 </div>
             </div>
             <p class="hero-copy">
-                批量查詢、智慧快取、分級錯誤辨識與 ZIP 匯出，專門為大量型號作業整理成一條順手的下載流程。
+                貼上型號後直接執行，這裡只保留查詢、進度與下載結果。
             </p>
-            <div class="chip-row">
-                <span class="chip">ZIP 一鍵打包</span>
-                <span class="chip">15 分鐘短期快取</span>
-                <span class="chip">批次冷卻重試</span>
-                <span class="chip">Render 後端代理</span>
-            </div>
         </article>
-
-        <aside class="hero-side">
-            <div class="metric-grid">
-                <section class="metric-card">
-                    <div class="metric-label">成功項目</div>
-                    <div class="metric-value ok" id="heroOk">0</div>
-                    <p class="metric-hint">本輪可直接打包進 ZIP 的圖檔數量。</p>
-                </section>
-                <section class="metric-card">
-                    <div class="metric-label">暫失 / 錯誤</div>
-                    <div class="metric-value err" id="heroErr">0</div>
-                    <p class="metric-hint">包含型號不存在、官網故障、拒絕連線與圖片解析失敗。</p>
-                </section>
-            <section class="metric-card">
-                <div class="metric-label">快取命中</div>
-                <div class="metric-value warn" id="heroCache">0</div>
-                <p class="metric-hint" id="heroCacheHint">短時間重查同型號時會直接回用已抓到的結果。</p>
-            </section>
-            <section class="metric-card">
-                <div class="metric-label">批次進度</div>
-                <div class="metric-value" id="heroProgress">0%</div>
-                <p class="metric-hint" id="heroBatchHint">系統會在大量暫時錯誤時自動冷卻後再做第二輪批次重試。</p>
-            </section>
-        </div>
-        </aside>
     </section>
 
-    <section class="workspace">
-        <section class="panel">
-            <div class="section-title">
-                <div>
-                    <h2>型號輸入</h2>
-                    <p>每行一個型號，也支援貼上逗號分隔內容與拖曳 `.txt` / `.csv`。</p>
-                </div>
-                <div class="toolbar">
-                    <button class="ghost-btn" id="historyBtn" onclick="loadHistory()">載入上次紀錄</button>
-                    <button class="ghost-btn" id="dedupBtn" onclick="removeDuplicates()" disabled>去除重複</button>
-                    <button class="ghost-btn" id="clearBtn" onclick="clearAll()" style="display:none;">清空</button>
-                </div>
+    <section class="panel">
+        <div class="section-title">
+            <div>
+                <h2>型號輸入</h2>
+                <p>每行一個型號，也支援貼上逗號分隔內容與拖曳 `.txt` / `.csv`。</p>
             </div>
-
-            <div class="input-shell" id="dropZone">
-                <textarea id="models" placeholder="例如：&#10;28cmtd&#10;RXV50ZVLT&#10;RXV60ZVLT"></textarea>
-                <div class="input-meta">
-                    <span class="warn-pill" id="dupBadge">發現重複型號，建議先整理</span>
-                    <span class="mini-note" id="modelCount">0 個型號</span>
-                </div>
+            <div class="toolbar">
+                <button class="ghost-btn" id="historyBtn" onclick="loadHistory()">載入上次紀錄</button>
+                <button class="ghost-btn" id="dedupBtn" onclick="removeDuplicates()" disabled>去除重複</button>
+                <button class="ghost-btn" id="clearBtn" onclick="clearAll()" style="display:none;">清空</button>
             </div>
+        </div>
 
-            <div class="action-bar">
-                <button class="primary-btn" id="runBtn" onclick="startBatch()">開始抓取並整理</button>
-                <button class="secondary-btn" id="zipBtn" onclick="downloadZipBundle()" style="display:none;">下載 ZIP</button>
-                <button class="secondary-btn" id="retryBtn" onclick="retryTransient()" style="display:none;">只重跑失敗項目</button>
-                <button class="secondary-btn" id="downloadAllBtn" onclick="downloadAllIndividually()" style="display:none;">逐張下載</button>
+        <div class="input-shell" id="dropZone">
+            <textarea id="models" placeholder="例如：&#10;28cmtd&#10;RXV50ZVLT&#10;RXV60ZVLT"></textarea>
+            <div class="input-meta">
+                <span class="warn-pill" id="dupBadge">發現重複型號，建議先整理</span>
+                <span class="mini-note" id="modelCount">0 個型號</span>
             </div>
-        </section>
+        </div>
 
-        <aside class="side-stack">
-            <section class="info-card">
-                <h3>目前後端</h3>
-                <p>前端只負責操作與下載；真正抓官網資料的工作由 Render API 處理。</p>
-                <div class="api-badge" id="apiBadge">尚未設定 Render API</div>
-            </section>
-            <section class="info-card">
-                <h3>錯誤分類</h3>
-                <ul>
-                    <li>`型號不存在`：官網查無結果。</li>
-                    <li>`官網暫時故障`：逾時、5xx、連線不穩，會自動重試。</li>
-                    <li>`官網拒絕連線`：401 / 403 類型。</li>
-                    <li>`圖片解析失敗`：找到產品，但回傳圖片資料格式異常。</li>
-                </ul>
-            </section>
-            <section class="info-card">
-                <h3>下載策略</h3>
-                <ul>
-                    <li>優先使用後端 ZIP 打包，避免瀏覽器跳出多次下載。</li>
-                    <li>同型號短時間重查會直接命中快取，降低對官網壓力。</li>
-                    <li>若整批暫時性失敗過多，系統會冷卻後再做第二輪批次重試。</li>
-                </ul>
-            </section>
-        </aside>
+        <div class="action-bar">
+            <button class="primary-btn" id="runBtn" onclick="startBatch()">開始抓取並整理</button>
+            <button class="secondary-btn" id="zipBtn" onclick="downloadZipBundle()" style="display:none;">下載 ZIP</button>
+            <button class="secondary-btn" id="retryBtn" onclick="retryTransient()" style="display:none;">只重跑失敗項目</button>
+            <button class="secondary-btn" id="downloadAllBtn" onclick="downloadAllIndividually()" style="display:none;">逐張下載</button>
+        </div>
     </section>
 
     <section class="panel progress-card">
@@ -900,8 +757,6 @@ function updateInputStats() {
 }
 
 function init() {
-    const backendText = hasConfiguredApiBase() ? API_BASE : '尚未設定 Render API';
-    document.getElementById('apiBadge').textContent = backendText;
     updateInputStats();
     if (!localStorage.getItem('energyLabelModels')) {
         document.getElementById('historyBtn').style.display = 'none';
@@ -1064,16 +919,6 @@ function renderSummary() {
     document.getElementById('statCache').textContent = streamSummary.cache_hits || cacheCount;
     document.getElementById('statBatchRetry').textContent = streamSummary.batch_retry_count || 0;
 
-    document.getElementById('heroOk').textContent = okCount;
-    document.getElementById('heroErr').textContent = errCount;
-    document.getElementById('heroCache').textContent = streamSummary.cache_hits || cacheCount;
-    document.getElementById('heroProgress').textContent = `${percent}%`;
-    document.getElementById('heroCacheHint').textContent = (streamSummary.cache_hits || cacheCount) > 0
-        ? '本輪已有資料直接由快取回用，查詢速度更快。'
-        : '短時間重查同型號時會直接回用已抓到的結果。';
-    document.getElementById('heroBatchHint').textContent = (streamSummary.batch_retry_count || 0) > 0
-        ? `本輪曾啟動批次補跑，共覆寫 ${streamSummary.batch_retry_count} 筆暫時性失敗。`
-        : '系統會在大量暫時錯誤時自動冷卻後再做第二輪批次重試。';
     document.getElementById('statCache').closest('.summary-box').classList.toggle('emphasis-cache', (streamSummary.cache_hits || cacheCount) > 0);
     document.getElementById('batchRetryBox').classList.toggle('emphasis-batch', (streamSummary.batch_retry_count || 0) > 0);
 
@@ -1089,7 +934,6 @@ function updateProgress(completed, total) {
     document.getElementById('progressText').textContent = total
         ? `已完成 ${completed} / ${total} 筆型號`
         : '等待開始';
-    document.getElementById('heroProgress').textContent = `${percent}%`;
 }
 
 function openModal(model) {
