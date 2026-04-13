@@ -6,8 +6,9 @@ const HEADERS = {
   'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8',
   'Referer': `${TARGET}/list.aspx`,
 };
-const MAX_ATTEMPTS = 3;
-const BACKOFF_BASE_MS = 700;
+const MAX_ATTEMPTS = 5;
+const BACKOFF_BASE_MS = 1200;
+const RETRYABLE_HTTP_CODES = new Set([408, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524]);
 
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -77,7 +78,12 @@ function parseHiddenFields(html) {
 async function aspnetPostSearch(model) {
   const url = `${TARGET}/list.aspx`;
   const page = await fetch(url, { headers: HEADERS, redirect: 'follow' });
-  if (!page.ok) return null;
+  if (!page.ok) {
+    if (RETRYABLE_HTTP_CODES.has(page.status)) {
+      throw new Error(`RETRYABLE_HTTP_${page.status}`);
+    }
+    return null;
+  }
   const html = await page.text();
   const form = parseHiddenFields(html);
 
@@ -99,7 +105,12 @@ async function aspnetPostSearch(model) {
     body,
     redirect: 'follow',
   });
-  if (!resp.ok) return null;
+  if (!resp.ok) {
+    if (RETRYABLE_HTTP_CODES.has(resp.status)) {
+      throw new Error(`RETRYABLE_HTTP_${resp.status}`);
+    }
+    return null;
+  }
   return await resp.text();
 }
 
@@ -112,7 +123,12 @@ async function getSearchFallback(model) {
   for (const params of combos) {
     try {
       const r = await fetch(`${TARGET}/list.aspx?${params}`, { headers: HEADERS, redirect: 'follow' });
-      if (!r.ok) continue;
+      if (!r.ok) {
+        if (RETRYABLE_HTTP_CODES.has(r.status)) {
+          throw new Error(`RETRYABLE_HTTP_${r.status}`);
+        }
+        continue;
+      }
       const html = await r.text();
       const rows = extractRows(html);
       const links = extractLinks(html);
@@ -146,7 +162,12 @@ async function fetchImageOnce(model) {
 
     const imgUrl = `${TARGET}/ImgViewer.ashx?applyID=${id[1]}&goodID=${p0[1]}`;
     const imgResp = await fetch(imgUrl, { headers: HEADERS, redirect: 'follow' });
-    if (!imgResp.ok) return { status: 'error', message: `HTTP ${imgResp.status}` };
+    if (!imgResp.ok) {
+      if (RETRYABLE_HTTP_CODES.has(imgResp.status)) {
+        return { status: 'error', message: `官網連線逾時或忙碌中 (HTTP ${imgResp.status})` };
+      }
+      return { status: 'error', message: `HTTP ${imgResp.status}` };
+    }
     const imgHtml = await imgResp.text();
 
     const srcMatch = imgHtml.match(/src=["']data:image\/(?:jpeg|jpg);base64,([^"']+)["']/i);
@@ -156,6 +177,11 @@ async function fetchImageOnce(model) {
 
     return { status: 'ok', base64: srcMatch[1].trim() };
   } catch (e) {
+    const msg = String(e?.message || '');
+    const match = msg.match(/^RETRYABLE_HTTP_(\d{3})$/);
+    if (match) {
+      return { status: 'error', message: `官網連線逾時或忙碌中 (HTTP ${match[1]})` };
+    }
     return { status: 'error', message: String(e) };
   }
 }
